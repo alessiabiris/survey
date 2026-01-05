@@ -24,6 +24,7 @@ with st.sidebar:
     default_max_iters = int(os.getenv("DEFAULT_MAX_ITERS", "2"))
 
     max_questions = st.slider("Max questions", min_value=5, max_value=60, value=default_max_q, step=1)
+    min_questions = max(max_questions - 5, int(max_questions * 0.8))
     max_iters = st.slider("Max QA revise loops", min_value=0, max_value=3, value=default_max_iters, step=1)
    
     st.divider()
@@ -54,6 +55,7 @@ if run:
                 project_brief=project_brief,
                 audience=audience,
                 max_questions=max_questions,
+                min_questions=min_questions,
                 max_iters=max_iters,
             )
             st.session_state.survey_state = final_state
