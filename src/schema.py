@@ -47,13 +47,7 @@ class Section(BaseModel):
 
 #final output
 class SurveyInstrument(BaseModel):
-    title: str #survey title
-    intro_text: str #welcome message
-    estimated_minutes: int = Field(..., ge=1, le=60) #estimated time 
     sections: List[Section] #sections 
-    # Useful extras
-    consent_text: Optional[str] = None #ethics
-    closing_text: Optional[str] = None #thank you message
 
 #what to measure and how the survey should be structured 
 #its a plan before the llm writes questions 
