@@ -104,7 +104,7 @@ if st.session_state.survey_state:
                 else:
                     st.write(f"Type: {qtype}")
                 if q.get("measured_construct") or q.get("analysis_tag"):
-                    st.caption(f"Construct: {q.get('measured_construct')} | Analysis: {q.get('analysis_tag')}")
+                    st.caption(f"Topic: {q.get('topic')} | Analysis: {q.get('analysis_tag')}"))
         if survey.get("closing_text"):
             st.markdown("---")
             st.write(survey["closing_text"])
