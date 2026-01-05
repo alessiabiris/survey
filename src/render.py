@@ -1,5 +1,5 @@
 #functions for displaying and analysing the survey output
-\
+
 from __future__ import annotations
 from typing import Dict, Any, List
 import pandas as pd
@@ -15,12 +15,11 @@ def extract_codebook(survey: Dict[str, Any]) -> pd.DataFrame:
                 "text": q.get("text"),
                 "type": q.get("type"),
                 "options": " | ".join(q.get("options") or []),
-                "measured_construct": q.get("measured_construct"),
+                "topic": q.get("topic"),
                 "analysis_tag": q.get("analysis_tag"),
                 "required": q.get("required", True),
             })
     return pd.DataFrame(rows)
-
 
 #count questions across sections
 def count_questions(survey: Dict[str, Any]) -> int:
