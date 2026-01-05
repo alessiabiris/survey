@@ -88,21 +88,21 @@ if st.session_state.survey_state:
         st.json(blueprint)
 
     with tab2:
-    st.subheader("Survey")
-    for sec in survey.get("sections", []):
-        st.markdown(f"## {sec.get('title')}")
-        if sec.get("description"):
-            st.write(sec["description"])
-        for q in sec.get("questions", []):
-            st.markdown(f"**{q.get('id')}** — {q.get('text')}")
-            qtype = q.get("type")
-            if qtype in ("single_choice", "multi_choice"):
-                opts = q.get("options") or []
-                st.write("Options:", ", ".join(opts))
-            else:
-                st.write(f"Type: {qtype}")
-            if q.get("topic") or q.get("analysis_tag"):
-                st.caption(f"Topic: {q.get('topic')} | Analysis: {q.get('analysis_tag')}")
+        st.subheader("Survey")
+        for sec in survey.get("sections", []):
+            st.markdown(f"## {sec.get('title')}")
+            if sec.get("description"):
+                st.write(sec["description"])
+            for q in sec.get("questions", []):
+                st.markdown(f"**{q.get('id')}** — {q.get('text')}")
+                qtype = q.get("type")
+                if qtype in ("single_choice", "multi_choice"):
+                    opts = q.get("options") or []
+                    st.write("Options:", ", ".join(opts))
+                else:
+                    st.write(f"Type: {qtype}")
+                if q.get("topic") or q.get("analysis_tag"):
+                    st.caption(f"Topic: {q.get('topic')} | Analysis: {q.get('analysis_tag')}")
 
     with tab3:
         st.subheader("Survey JSON")
