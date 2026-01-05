@@ -92,27 +92,41 @@ Structure:
 2. Main sections matching blueprint sections
 3. End with open-ended feedback question
 
-Each section object:
-- "title": string
-- "description": string or null
-- "questions": array of question objects
+OUTPUT FORMAT - follow this exactly:
+{{
+  "sections": [
+    {{
+      "title": "Section Name",
+      "description": null,
+      "questions": [
+        {{
+          "id": "Q1",
+          "text": "Question text here",
+          "type": "single_choice",
+          "options": ["Option 1", "Option 2"],
+          "required": true,
+          "topic": "topic_name",
+          "analysis_tag": "snake_case_tag",
+          "notes": null
+        }}
+      ]
+    }}
+  ]
+}}
 
-Each question object:
-- "id": string (Q1, Q2, Q3... sequential, no gaps)
-- "text": string (clear, neutral, asks only one thing)
-- "type": string (single_choice, multi_choice, likert_5, free_text, numeric)
-- "options": array of strings for choice/likert questions, null for free_text/numeric
-- "required": boolean (true for most, false for free_text)
-- "topic": string (from blueprint topics_to_measure)
-- "analysis_tag": string (snake_case label for data analysis)
-- "notes": string or null
+Question types:
+- single_choice: one answer (use options array)
+- multi_choice: select all that apply (use options array)
+- likert_5: 5-point scale (use options array with 5 labels)
+- free_text: open text (options = null)
+- numeric: number input (options = null)
 
-IMPORTANT: Double-check that:
+IMPORTANT: 
+- The output MUST be {{"sections": [...]}} with sections as an array
+- Do NOT use section names as keys
 - You have approximately {max_questions} questions total
-- All likert scales have exactly 5 or 7 different options (no repeats)
+- All likert scales have exactly 5 different options (no repeats)
 - No two questions have the same text
-- Every question maps to a topic from the blueprint
-
 Return ONLY the JSON object, no other text.
 """
 
