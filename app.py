@@ -94,15 +94,15 @@ if st.session_state.survey_state:
                 qtype = q.get("type")
                 opts = q.get("options") or []
                 if qtype in ("single_choice", "likert_5", "likert_7"):
-                    for opt in opts:
-                        st.radio("", [opt], key=f"{q.get('id')}_{opt}", disabled=True, label_visibility="collapsed")
+                    st.radio("Select one:", opts, key=f"{q.get('id')}_radio", disabled=True)
                 elif qtype == "multi_choice":
+                    st.write("Select all that apply:")
                     for opt in opts:
                         st.checkbox(opt, key=f"{q.get('id')}_{opt}", disabled=True)
                 elif qtype == "free_text":
-                    st.text_area("", key=f"{q.get('id')}_text", disabled=True, height=80, label_visibility="collapsed")
+                    st.text_area("Your answer:", key=f"{q.get('id')}_text", disabled=True, height=80)
                 elif qtype == "numeric":
-                    st.number_input("", key=f"{q.get('id')}_num", disabled=True, label_visibility="collapsed")
+                    st.number_input("Enter a number:", key=f"{q.get('id')}_num", disabled=True)
                 st.markdown("---")
 
     with tab3:
