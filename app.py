@@ -21,11 +21,9 @@ with st.sidebar:
     st.header("Configuration")
 
     default_max_q = int(os.getenv("DEFAULT_MAX_QUESTIONS", "20"))
-    default_max_iters = int(os.getenv("DEFAULT_MAX_ITERS", "2"))
 
     max_questions = st.slider("Max questions", min_value=5, max_value=60, value=default_max_q, step=1)
     min_questions = max(max_questions - 5, int(max_questions * 0.8))
-    max_iters = st.slider("Max QA revise loops", min_value=0, max_value=3, value=default_max_iters, step=1)
    
     st.divider()
     if st.button("Start New Survey", use_container_width=True):
@@ -56,7 +54,7 @@ if run:
                 audience=audience,
                 max_questions=max_questions,
                 min_questions=min_questions,
-                max_iters=max_iters,
+                max_iters=3,
             )
             st.session_state.survey_state = final_state
             st.session_state.review_phase = True
@@ -81,7 +79,7 @@ if st.session_state.survey_state:
     else:
         st.info(f"Questions: {qcount} (max: {max_questions})")
 
-    tab1, tab2, tab3, tab4 = st.tabs(["Blueprint", "Survey (formatted)", "Survey JSON", "QA report"])
+    tab1, tab2, tab3, tab4 = st.tabs(["Blueprint", "Survey (formatted)", "Codebook", "QA report"])
 
     with tab1:
         st.subheader("Blueprint")
@@ -91,32 +89,25 @@ if st.session_state.survey_state:
         st.subheader("Survey")
         for sec in survey.get("sections", []):
             st.markdown(f"## {sec.get('title')}")
-            if sec.get("description"):
-                st.write(sec["description"])
             for q in sec.get("questions", []):
                 st.markdown(f"**{q.get('id')}** — {q.get('text')}")
                 qtype = q.get("type")
-                if qtype in ("single_choice", "multi_choice"):
-                    opts = q.get("options") or []
-                    st.write("Options:", ", ".join(opts))
-                else:
-                    st.write(f"Type: {qtype}")
-                if q.get("topic") or q.get("analysis_tag"):
-                    st.caption(f"Topic: {q.get('topic')} | Analysis: {q.get('analysis_tag')}")
+                opts = q.get("options") or []
+                if qtype in ("single_choice", "likert_5", "likert_7"):
+                    for opt in opts:
+                        st.radio("", [opt], key=f"{q.get('id')}_{opt}", disabled=True, label_visibility="collapsed")
+                elif qtype == "multi_choice":
+                    for opt in opts:
+                        st.checkbox(opt, key=f"{q.get('id')}_{opt}", disabled=True)
+                elif qtype == "free_text":
+                    st.text_area("", key=f"{q.get('id')}_text", disabled=True, height=80, label_visibility="collapsed")
+                elif qtype == "numeric":
+                    st.number_input("", key=f"{q.get('id')}_num", disabled=True, label_visibility="collapsed")
+                st.markdown("---")
 
     with tab3:
-        st.subheader("Survey JSON")
-        survey_json_str = json.dumps(survey, indent=2)
-        st.code(survey_json_str, language="json")
-        st.download_button(
-            "Download survey.json",
-            data=survey_json_str.encode("utf-8"),
-            file_name="survey.json",
-            mime="application/json",
-        )
-
-        codebook_df = extract_codebook(survey)
         st.subheader("Codebook")
+        codebook_df = extract_codebook(survey)
         st.dataframe(codebook_df, use_container_width=True)
         st.download_button(
             "Download codebook.csv",
