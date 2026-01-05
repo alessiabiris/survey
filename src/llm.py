@@ -43,6 +43,7 @@ def chat_json(
     user: str,
     model: Optional[str] = None,
     temperature: float = 0.2,
+    max_tokens: int = 8192,
 ) -> Dict[str, Any]:
 
     client = get_client()
@@ -55,6 +56,7 @@ def chat_json(
             {"role": "user", "content": user},
         ],
         temperature=temperature,
+        max_tokens = max_tokens,
         response_format={"type": "json_object"},
     )
 
