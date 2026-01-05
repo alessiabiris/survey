@@ -5,7 +5,7 @@
 #generator output: full survey
 
 #QA - reviews --> is this survey good? 
-#QA output: QA report (passed?, issues, fixes)
+#QA output: QA report (passed?, issues,fixes)
 
 #either loop or done --> then human review 
 
