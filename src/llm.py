@@ -47,7 +47,7 @@ def chat_json(
 ) -> Dict[str, Any]:
 
     client = get_client()
-    model = model or get_setting("LLM_MODEL", "Qwen/Qwen2.5-7B-Instruct")
+    model = model or get_setting("LLM_MODEL", "Qwen/Qwen2.5-72B-Instruct")
 
     resp = client.chat.completions.create(
         model=model,
