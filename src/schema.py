@@ -1,5 +1,5 @@
 #data structures - what are we passing around
-\
+
 from __future__ import annotations
 from typing import List, Optional, Literal, Dict, Any
 from pydantic import BaseModel, Field
@@ -25,23 +25,21 @@ class SkipRule(BaseModel):
     value: Any
     goto_question_id: str
 
-#Question -defines everything about a question 
+#Question - defines everything about a question 
 class Question(BaseModel):
     id: str = Field(..., description="Unique question id, e.g. Q1")
     text: str #actual question text
     type: QuestionType #one of the above question type 
     options: Optional[List[str]] = None #answer choices
     required: bool = True #if mandatory
-
     # Metadata for analysis readiness 
-    # this part says what each question measure and how to group it in reports 
-    measured_construct: Optional[str] = Field(None, description="What this question measures")
+    # this part says what each question measures and how to group it in reports 
+    topic: Optional[str] = Field(None, description="What this question measures")
     analysis_tag: Optional[str] = Field(None, description="How it will be used in analysis")
     notes: Optional[str] = None
-
     skip_rules: Optional[List[SkipRule]] = None
 
-#splits in section eg Profile of respondents etc
+#splits in sections eg Profile of respondents etc
 class Section(BaseModel):
     title: str
     description: Optional[str] = None
@@ -53,22 +51,20 @@ class SurveyInstrument(BaseModel):
     intro_text: str #welcome message
     estimated_minutes: int = Field(..., ge=1, le=60) #estimated time 
     sections: List[Section] #sections 
-
     # Useful extras
     consent_text: Optional[str] = None #ethics
     closing_text: Optional[str] = None #thank you message
 
-
 #what to measure and how the survey should be structured 
 #its a plan before the llm writes questions 
-# this makes teh LLM AGENTIC xke it thinks first then writes 
+#this makes the LLM AGENTIC - it thinks first then writes 
 #generator uses the blueprint to create the actual survey 
 class Blueprint(BaseModel):
-    objectives: List[str]  #what are we trying to learn from the survey
+    goals: List[str]  #what are we trying to learn from the survey
     target_audience: str #who takes the survey
-    key_constructs: List[str] #what concepts to measure (satisfaction, trust etc)
-    modules: List[str] #sugegsted sections
-    suggested_scales: List[str] #recommendated question types
+    topics_to_measure: List[str] #what concepts to measure (satisfaction, trust etc)
+    sections: List[str] #suggested sections
+    question_types: List[str] #recommended question types
     max_questions: int = Field(..., ge=5, le=80) 
     notes: Optional[str] = None
 
