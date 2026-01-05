@@ -35,7 +35,8 @@ Target audience:
 {audience}
 
 Constraints:
-- Target questions: {max_questions}
+- Target questions: {max_questions} (generate this many, not fewer)
+- Minimum questions: {min_questions}
 
 Task:
 Create a survey blueprint. Think through: 
@@ -79,7 +80,9 @@ Project brief:
 {project_brief}
 
 Constraints:
-- Target questions: {max_questions} (aim for this number, not less)
+- You MUST generate between {min_questions} and {max_questions} questions
+- Aim for {max_questions} questions
+- Generating fewer than {min_questions} is NOT acceptable
 
 Task:
 Generate a complete survey.
