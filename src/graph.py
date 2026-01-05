@@ -111,7 +111,7 @@ def qa_node(state: SurveyState) -> SurveyState:
 def revise_or_end(state: SurveyState) -> str:
    
     iters = state.get("iter_count", 0) #how many times we revise
-    max_iters = state.get("max_iters", 1) #limit?
+    max_iters = state.get("max_iters", 3) #limit?
     qa = state.get("qa") or {}
     passed = bool(qa.get("passed", False)) #did QA pass?
 
@@ -172,7 +172,7 @@ def run_survey_graph(
     audience: str,
     max_questions: int = 20,
     min_questions: int = 15, 
-    max_iters: int = 1,
+    max_iters: int = 3,
 ):
     app = build_graph()
     init: SurveyState = {
@@ -214,6 +214,13 @@ def run_human_revision(
     
     # Run QA on the revised survey
     current_state = qa_node(current_state)
+    
+    # Auto-fix loop: if QA fails, keep revising until it passes or hits max iterations
+    current_state["iter_count"] = 0
+    max_auto_fixes = 3
+    while not current_state["qa"].get("passed", False) and current_state["iter_count"] < max_auto_fixes:
+        current_state = revise_node(current_state)
+        current_state = qa_node(current_state)
     
     return current_state
 
