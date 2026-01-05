@@ -21,6 +21,7 @@ class SurveyState(TypedDict, total=False):
     project_brief: str
     audience: str
     max_questions: int
+    min_questions: int
     max_iters: int
     iter_count: int
 
@@ -48,6 +49,7 @@ def planner_node(state: SurveyState) -> SurveyState:
         project_brief=state["project_brief"],
         audience=state["audience"],
         max_questions=state["max_questions"],
+        min_questions=state["min_questions"],
     )
 
     #STEP 3: call the LLM 
@@ -69,6 +71,7 @@ def generator_node(state: SurveyState) -> SurveyState:
         blueprint_json=json.dumps(state["blueprint"], indent=2),
         project_brief=state["project_brief"],
         max_questions=state["max_questions"],
+        min_questions=state["min_questions"], 
     )
     #STEP 3: call the LLM 
     out = chat_json(GENERATOR_SYSTEM, user)
@@ -168,6 +171,7 @@ def run_survey_graph(
     project_brief: str,
     audience: str,
     max_questions: int = 20,
+    min_questions: int = 15, 
     max_iters: int = 1,
 ):
     app = build_graph()
@@ -175,6 +179,7 @@ def run_survey_graph(
         "project_brief": project_brief.strip(),
         "audience": audience.strip(),
         "max_questions": int(max_questions),
+        "min_questions": int(min_questions),
         "max_iters": int(max_iters),
         "iter_count": 0,
     }
