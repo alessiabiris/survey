@@ -35,7 +35,7 @@ Target audience:
 {audience}
 
 Constraints:
-- Max questions: {max_questions}
+- Target questions: {max_questions}
 
 Task:
 Create a survey blueprint. Think through: 
