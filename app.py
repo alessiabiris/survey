@@ -6,6 +6,16 @@ from dotenv import load_dotenv
 from src.graph import run_survey_graph, run_human_revision
 from src.render import extract_codebook, count_questions
 
+import streamlit as st
+
+PASSWORD = st.secrets["APP_PASSWORD"]
+
+pw = st.text_input("Enter password", type="password")
+
+if pw != PASSWORD:
+    st.stop()
+
+
 load_dotenv()
 
 st.set_page_config(page_title="EKOS Survey Designer", layout="wide")
