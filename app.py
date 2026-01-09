@@ -4,7 +4,7 @@ import streamlit as st
 from dotenv import load_dotenv
 
 from src.graph import run_survey_graph, run_human_revision
-from src.render import extract_codebook, count_questions
+from src.render import extract_codebook, count_questions, generate_survey_docx
 
 import streamlit as st
 
@@ -114,7 +114,13 @@ if st.session_state.survey_state:
                 elif qtype == "numeric":
                     st.number_input("Enter a number:", key=f"{q.get('id')}_num", disabled=True)
                 st.markdown("---")
-
+                
+        st.download_button(
+            " Download as Word",
+            data=generate_survey_docx(survey),
+            file_name="survey.docx",
+            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        )
     with tab3:
         st.subheader("Codebook")
         codebook_df = extract_codebook(survey)
