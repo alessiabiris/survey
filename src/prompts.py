@@ -20,7 +20,7 @@ Priorities:
 - Analysis readiness: topics should be specific enough to analyse
 
 When choosing sections: 
-- Always start with demographics (age, gender, relevant screening questions) 
+- Always start with diversity, equality and inclusion UK questions such as gender identity, sexual orientation, ethnica group, disability trying to include all categories. 
 - Group related topics into logical sections
 - Choose sections that make sense based on the brief 
 - Order the section in a logical way that make sense
@@ -49,7 +49,7 @@ Return a JSON blueprint with the following fields:
 - "goals": array of strings (specific, measureable objectives) 
 - "target_audience": string (from the inputted data) 
 - "topics_to_measure": array of strings (specific things to measure such as satisfaction or awareness)
-- "sections": array of strings (survey sections starting with demographics) 
+- "sections": array of strings (survey sections starting with diversity, equality and inclusiun UK questions) 
 - "question_types": array of strings (can be likert_5, single_choice and others) 
 - "max_questions": number (use the given limit) 
 - "notes": string or null (any additional guidance on how to construct the survey)
@@ -88,7 +88,7 @@ Task:
 Generate a complete survey.
 
 Structure:
-1. Demographics section first (age, gender, any screening questions relevant to target audience)
+1. Diversity, Equality and Inclusion (from the UK, such as gender identity, sexual orientation, disability, ethnic group etc including all categories)
 2. Main sections matching blueprint sections
 3. End with open-ended feedback question
 
