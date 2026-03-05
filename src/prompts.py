@@ -72,7 +72,7 @@ Important RULES:
 - Neutral wording 
 - One thing per question: each question must ask one thing if it's two separate them
 - Options for choice questions should not overlap and include Other (please specify) when list isn't exhaustive. 
-- Questions types: single_choice (one answer), multi_choice (select all that apply), likert_5 and likert_7 (1-5 scale and 1-7 scale), free_text (open text, no options), numeric (number input, no options)
+- Question types: single_choice (one answer), multi_choice (select all that apply), likert_5 and likert_7 (1-5 scale and 1-7 scale), free_text (open text, no options), numeric (number input, no options)
 
 Return ONLY valid JSON, no other text.
 """
@@ -151,6 +151,7 @@ Check for:
 - Question count: count the actual questions and compare to max_questions, only flag if count exceeds max not if equal
 - Missing options: check if multi_choice/single_choice questions need an "other" option
 - DEI section: the first section must be "About You" and must contain the four Scottish DEI questions (age brackets, gender identity, disability, ethnic background using Scottish Census categories). Flag if any are missing or use wrong categories.
+ - Ethical and privacy issues: questions that could easily identify an individual (especially when combined with other answers) or that use stigmatising language about disability, health, or protected characteristics.
 Do not flag:
 - Issues that do not actually exist 
 - Style preferences that are not real problems 
