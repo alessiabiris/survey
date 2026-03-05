@@ -6,41 +6,20 @@ from dotenv import load_dotenv
 from src.graph import run_survey_graph, run_human_revision
 from src.render import extract_codebook, count_questions, generate_survey_docx
 
+import streamlit as st
 
-def _get_app_password() -> str:
-    """
-    Resolve the application password from Streamlit secrets or environment.
-    Fails fast with a clear message if nothing is configured.
-    """
-    password = None
-    try:
-        if "APP_PASSWORD" in st.secrets:
-            password = st.secrets["APP_PASSWORD"]
-    except Exception:
-        password = None
-
-    if not password:
-        password = os.getenv("APP_PASSWORD")
-
-    if not password:
-        st.error(
-            "Application password is not configured. "
-            "Set APP_PASSWORD in Streamlit secrets or environment."
-        )
-        st.stop()
-
-    return str(password)
-
-
-PASSWORD = _get_app_password()
-
-st.set_page_config(page_title="EKOS Survey Designer", layout="wide")
-st.title("EKOS Survey Designer")
+PASSWORD = st.secrets["APP_PASSWORD"]
 
 pw = st.text_input("Enter password", type="password")
 
 if pw != PASSWORD:
     st.stop()
+
+
+load_dotenv()
+
+st.set_page_config(page_title="EKOS Survey Designer", layout="wide")
+st.title("EKOS Survey Designer")
 
 if "survey_state" not in st.session_state:
     st.session_state.survey_state = None
@@ -65,10 +44,6 @@ with st.sidebar:
 ######## INPUT FORM ##########
 project_brief = st.text_area("Project brief", height=220)
 audience = st.text_input("Target audience")
-st.caption(
-    f"The agent will generate between {min_questions} and {max_questions} questions, "
-    f"aiming for around {max_questions} in total."
-)
 
 if not st.session_state.review_phase:
     run = st.button("Generate survey", type="primary", use_container_width=True)
@@ -159,12 +134,6 @@ if st.session_state.survey_state:
 
     with tab4:
         st.subheader("QA report")
-        issues = qa.get("issues") or []
-        if issues:
-            st.markdown("**Key QA issues identified:**")
-            for item in issues:
-                st.markdown(f"- {item}")
-            st.markdown("---")
         st.json(qa)
         if not qa.get("passed", False):
             st.warning("QA did not fully pass. Review issues above or provide revision notes below.")
