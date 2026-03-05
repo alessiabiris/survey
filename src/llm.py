@@ -3,13 +3,9 @@ from __future__ import annotations
 import os
 import json
 import re
-import logging
 from typing import Any, Dict, Optional
 from openai import OpenAI
 import streamlit as st
-
-# Basic logger for server-side diagnostics
-logger = logging.getLogger(__name__)
 
 # ---- secrets helper -------------------------------------------------
 def get_setting(name: str, default: Optional[str] = None) -> Optional[str]:
@@ -19,13 +15,6 @@ def get_setting(name: str, default: Optional[str] = None) -> Optional[str]:
     except Exception:
         pass
     return os.getenv(name, default)
-
-
-# Sensible defaults, overridable via env/secrets
-DEFAULT_LLM_MODEL = "Qwen/Qwen2.5-72B-Instruct"
-DEFAULT_TEMPERATURE = 0.2
-DEFAULT_MAX_TOKENS = 8192
-
 
 #--------client 
 def get_client() -> OpenAI:
@@ -38,7 +27,6 @@ def get_client() -> OpenAI:
         )
     return OpenAI(api_key=api_key, base_url=base_url)
 
-
 #-------extract JSON from response that might have extra text
 def extract_json(text: str) -> dict:
     # Try direct parse first
@@ -46,7 +34,7 @@ def extract_json(text: str) -> dict:
         return json.loads(text)
     except json.JSONDecodeError:
         pass
-
+    
     # Try to find JSON in markdown code blocks
     code_block = re.search(r'```(?:json)?\s*([\s\S]*?)\s*```', text)
     if code_block:
@@ -54,7 +42,7 @@ def extract_json(text: str) -> dict:
             return json.loads(code_block.group(1))
         except json.JSONDecodeError:
             pass
-
+    
     # Try to find JSON object in text
     json_match = re.search(r'\{[\s\S]*\}', text)
     if json_match:
@@ -62,25 +50,24 @@ def extract_json(text: str) -> dict:
             return json.loads(json_match.group(0))
         except json.JSONDecodeError:
             pass
-
-    raise RuntimeError("The language model did not return valid JSON.")
-
+    
+    raise RuntimeError(f"Could not extract valid JSON from response:\n{text}")
 
 #-------chat
 def chat_json(
     system: str,
     user: str,
     model: Optional[str] = None,
-    temperature: float = DEFAULT_TEMPERATURE,
-    max_tokens: int = DEFAULT_MAX_TOKENS,
+    temperature: float = 0.2,
+    max_tokens: int = 8192,
 ) -> Dict[str, Any]:
     client = get_client()
-    model_name = model or get_setting("LLM_MODEL", DEFAULT_LLM_MODEL)
-
+    model = model or get_setting("LLM_MODEL", "Qwen/Qwen2.5-72B-Instruct")
+    
+    # Try with response_format first, fall back without it
     try:
-        # Try with response_format first
         resp = client.chat.completions.create(
-            model=model_name,
+            model=model,
             messages=[
                 {"role": "system", "content": system},
                 {"role": "user", "content": user},
@@ -89,11 +76,10 @@ def chat_json(
             max_tokens=max_tokens,
             response_format={"type": "json_object"},
         )
-    except Exception as e:
-        # Some providers don't support response_format or may error differently
-        logger.warning("LLM call without response_format due to error: %s", e)
+    except Exception:
+        # Some providers don't support response_format
         resp = client.chat.completions.create(
-            model=model_name,
+            model=model,
             messages=[
                 {"role": "system", "content": system},
                 {"role": "user", "content": user},
@@ -101,11 +87,7 @@ def chat_json(
             temperature=temperature,
             max_tokens=max_tokens,
         )
-
+    
     content = resp.choices[0].message.content or "{}"
-    data = extract_json(content)
-
-    if not isinstance(data, dict):
-        raise RuntimeError("The language model response was parsed but is not a JSON object.")
-
-    return data
+    
+    return extract_json(content)
