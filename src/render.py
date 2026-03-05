@@ -1,80 +1,77 @@
-#data structures - what are we passing around
+#functions for displaying and analysing the survey output
 
 from __future__ import annotations
-from typing import List, Optional, Literal, Dict, Any
-from pydantic import BaseModel, Field
+from typing import Dict, Any, List
+import pandas as pd
 
-#type of questions 
-QuestionType = Literal[
-    "single_choice",
-    "multi_choice",
-    "multiple_choice",
-    "likert_5", #1-5 scale
-    "free_text",
-    "numeric", #numeric input
-    "date", 
-    "nps_0_10", #score 0 to 10 
-]
+#loops through all sections, questions and flattens everything into a table
+def extract_codebook(survey: Dict[str, Any]) -> pd.DataFrame:
+    rows: List[dict] = []
+    for sec in survey.get("sections", []):
+        for q in sec.get("questions", []):
+            rows.append({
+                "question_id": q.get("id"),
+                "section": sec.get("title"),
+                "text": q.get("text"),
+                "type": q.get("type"),
+                "options": " | ".join(q.get("options") or []),
+                "topic": q.get("topic"),
+                "analysis_tag": q.get("analysis_tag"),
+                "required": q.get("required", True),
+            })
+    return pd.DataFrame(rows)
 
-#define conditional logic for surveys
-#so if "no" q3 then skip to q10 for example
-class SkipRule(BaseModel):
-    if_question_id: str
-    operator: Literal["equals", "not_equals", "in", "not_in", "gte", "lte"]
-    value: Any
-    goto_question_id: str
+#count questions across sections
+def count_questions(survey: Dict[str, Any]) -> int:
+    n = 0
+    for sec in survey.get("sections", []):
+        n += len(sec.get("questions", []))
+    return n
 
-#Question - defines everything about a question 
-class Question(BaseModel):
-    id: str = Field(..., description="Unique question id, e.g. Q1")
-    text: str #actual question text
-    type: QuestionType #one of the above question type 
-    options: Optional[List[str]] = None #answer choices
-    required: bool = True #if mandatory
-    # Metadata for analysis readiness 
-    # this part says what each question measures and how to group it in reports 
-    topic: Optional[str] = Field(None, description="What this question measures")
-    analysis_tag: Optional[str] = Field(None, description="How it will be used in analysis")
-    notes: Optional[str] = None
-    skip_rules: Optional[List[SkipRule]] = None
 
-#splits in sections eg Profile of respondents etc
-class Section(BaseModel):
-    title: str
-    description: Optional[str] = None
-    questions: List[Question]
+from docx import Document
+from docx.shared import Pt, Inches
+from docx.enum.text import WD_BREAK
+from io import BytesIO
 
-#final output
-class SurveyInstrument(BaseModel):
-    sections: List[Section] #sections 
-
-#what to measure and how the survey should be structured 
-#its a plan before the llm writes questions 
-#this makes the LLM AGENTIC - it thinks first then writes 
-#generator uses the blueprint to create the actual survey 
-class Blueprint(BaseModel):
-    goals: List[str]  #what are we trying to learn from the survey
-    target_audience: str #who takes the survey
-    topics_to_measure: List[str] #what concepts to measure (satisfaction, trust etc)
-    sections: List[str] #suggested sections
-    question_types: List[str] #recommended question types
-    max_questions: int = Field(..., ge=5, le=80) 
-    notes: Optional[str] = None
-
-#the Agent loops 3 times over itself to check for mistakes
-class QAReport(BaseModel):
-    passed: bool #did it pass review?
-    issues: List[str] = Field(default_factory=list) #whats wrong
-    suggested_fixes: List[str] = Field(default_factory=list) #how to fix it 
-
-#human review 
-#so the final output of the agent -- we get to review it and if approved perfect if not write notes of what to change
-class HumanReview(BaseModel):
-    approved: bool = False
-    notes: Optional[str] = Field(None, description="Revision notes from the human reviewer")
-
-    @classmethod
-    def from_input(cls, notes: str) -> "HumanReview":
-        if not notes or not notes.strip():
-            raise ValueError("Revision notes cannot be empty")
-        return cls(approved=False, notes=notes.strip())
+def generate_survey_docx(survey: dict) -> bytes:
+    doc = Document()
+    
+    # Title
+    title = doc.add_heading("Survey", level=0)
+    
+    for sec in survey.get("sections", []):
+        # Section title
+        doc.add_heading(sec.get("title", ""), level=1)
+        
+        for q in sec.get("questions", []):
+            # Question text
+            q_para = doc.add_paragraph()
+            q_para.add_run(f"{q.get('id')} — ").bold = True
+            q_para.add_run(q.get("text", ""))
+            
+            qtype = q.get("type")
+            opts = q.get("options") or []
+            
+            if qtype in ("single_choice", "likert_5", "likert_7"):
+                for opt in opts:
+                    doc.add_paragraph(f"○  {opt}", style="List Bullet")
+            
+            elif qtype == "multi_choice":
+                for opt in opts:
+                    doc.add_paragraph(f"☐  {opt}", style="List Bullet")
+            
+            elif qtype == "free_text":
+                doc.add_paragraph("_" * 50)
+            
+            elif qtype == "numeric":
+                doc.add_paragraph("[Enter number: ______ ]")
+            
+            # Add spacing
+            doc.add_paragraph()
+    
+    # Save to bytes
+    buffer = BytesIO()
+    doc.save(buffer)
+    buffer.seek(0)
+    return buffer.getvalue()
