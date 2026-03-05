@@ -57,7 +57,7 @@ def generate_survey_docx(survey: dict) -> bytes:
                 for opt in opts:
                     doc.add_paragraph(f"○  {opt}", style="List Bullet")
             
-            elif qtype == "multi_choice":
+            elif qtype in ("multi_choice", "multiple_choice"):
                 for opt in opts:
                     doc.add_paragraph(f"☐  {opt}", style="List Bullet")
             
