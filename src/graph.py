@@ -193,35 +193,39 @@ def run_human_revision(
     state: dict,
     human_notes: str,
 ) -> dict:
-    # Convert to SurveyState
+    # STEP 1: Validate human input properly using HumanReview class
+    from .schema import HumanReview
+    review = HumanReview.from_input(human_notes)
+
+    # STEP 2: Convert to SurveyState and update revision count
     current_state: SurveyState = {**state}
-    
-    # Add human notes
-    current_state["human_notes"] = human_notes
+    current_state["human_notes"] = review.notes
     current_state["human_revision_count"] = current_state.get("human_revision_count", 0) + 1
-    
-    # Generate revised survey using human notes
+
+    # STEP 3: Extract previous QA issues to give the agent full context
+    qa = current_state.get("qa") or {}
+    previous_issues = qa.get("issues") or []
+    qa_issues_text = "\n".join([f"- {issue}" for issue in previous_issues]) if previous_issues else "None"
+
+    # STEP 4: Build prompt with FULL context — blueprint, survey, QA issues, and human notes
+    # The agent sees everything so it can make targeted changes without rediscovering problems
     user = HUMAN_REVISE_USER.format(
         blueprint_json=json.dumps(current_state["blueprint"], indent=2),
         survey_json=json.dumps(current_state["survey"], indent=2),
-        human_notes=human_notes,
+        qa_issues=qa_issues_text,
+        human_notes=review.notes,
         max_questions=current_state["max_questions"],
     )
-    
+
+    # STEP 5: Single generation pass — no QA loop, trust the human reviewer
     out = chat_json(GENERATOR_SYSTEM, user)
     survey = SurveyInstrument.model_validate(out)
     current_state["survey"] = survey.model_dump()
-    
-    # Run QA on the revised survey
+
+    # STEP 6: Run one single QA check for the report — but do NOT loop on failure
+    # The human has reviewed this — we show the QA report but do not auto-revise
     current_state = qa_node(current_state)
-    
-    # Auto-fix loop: if QA fails, keep revising until it passes or hits max iterations
-    current_state["iter_count"] = 0
-    max_auto_fixes = 3
-    while not current_state["qa"].get("passed", False) and current_state["iter_count"] < max_auto_fixes:
-        current_state = revise_node(current_state)
-        current_state = qa_node(current_state)
-    
+
     return current_state
 
 
