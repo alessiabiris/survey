@@ -10,7 +10,6 @@ QuestionType = Literal[
     "multi_choice",
     "multiple_choice",
     "likert_5", #1-5 scale
-    "likert_7", #1-7 scale
     "free_text",
     "numeric", #numeric input
     "date", 
@@ -72,4 +71,10 @@ class QAReport(BaseModel):
 #so the final output of the agent -- we get to review it and if approved perfect if not write notes of what to change
 class HumanReview(BaseModel):
     approved: bool = False
-    notes: Optional[str] = None
+    notes: Optional[str] = Field(None, description="Revision notes from the human reviewer")
+
+    @classmethod
+    def from_input(cls, notes: str) -> "HumanReview":
+        if not notes or not notes.strip():
+            raise ValueError("Revision notes cannot be empty")
+        return cls(approved=False, notes=notes.strip())
