@@ -178,32 +178,43 @@ Return ONLY the JSON object, no other text.
 """
 
 HUMAN_REVISE_USER = """\
-Blueprint (JSON):
+You are revising a survey based on direct feedback from a human reviewer.
+
+--- FULL CONTEXT ---
+
+Blueprint (what the survey was designed to measure):
 {blueprint_json}
 
-Previous survey draft:
+Current survey (what was generated):
 {survey_json}
 
-Human reviewer notes:
+Previous QA issues (already identified problems for your awareness):
+{qa_issues}
+
+--- HUMAN REVIEWER NOTES ---
 {human_notes}
 
-Constraints:
+--- CONSTRAINTS ---
 - Max questions total: {max_questions}
 
-Task:
-Revise the survey to address EVERY point in the reviewer's notes.
+--- YOUR TASK ---
+Apply EVERY change the human reviewer has requested. You have full context of the 
+blueprint, the current survey, and any known QA issues. Use this to make smart, 
+targeted changes without breaking what is already working.
 
 Checklist:
-- [ ] Read each note from the reviewer
+- [ ] Read each note from the reviewer carefully
 - [ ] Make the specific change requested
-- [ ] If asked to ADD questions, add them (don't just modify existing)
+- [ ] If asked to ADD questions, add them (don't just modify existing ones)
 - [ ] If asked to REMOVE questions, remove them
 - [ ] If asked to REWORD, change the actual text
-- [ ] Renumber questions sequentially (Q1, Q2, Q3...) after changes
+- [ ] Renumber questions sequentially (Q1, Q2, Q3...) after any changes
 - [ ] Ensure likert scales have 5 different options (no repeats)
+- [ ] Do not reintroduce any of the previous QA issues
 
-IMPORTANT: 
+IMPORTANT:
 - Do not ignore any reviewer feedback
+- Do not re-run QA yourself - just make the changes cleanly
 - If the reviewer asks for more questions, the final count should increase
 - If the reviewer asks for new topics, add questions about those topics
 
