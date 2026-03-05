@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import json
-from typing import TypedDict, Optional, List, Dict, Any
+from typing import TypedDict, Optional
 
 from langgraph.graph import StateGraph, END
 
@@ -34,58 +34,9 @@ class SurveyState(TypedDict, total=False):
     human_notes: str
     human_revision_count: int
 
+#converts pydantic model to json schema 
 def _json_schema(model_cls) -> str:
     return json.dumps(model_cls.model_json_schema(), indent=2)
-
-
-def _count_questions_from_dict(survey: Dict[str, Any]) -> int:
-    """Count questions from a plain dict survey payload."""
-    total = 0
-    for sec in survey.get("sections", []) or []:
-        total += len(sec.get("questions") or [])
-    return total
-
-
-def _validate_survey_structure(
-    survey: SurveyInstrument,
-    min_questions: int,
-    max_questions: int,
-) -> None:
-    """
-    Run additional structural checks that go beyond Pydantic validation.
-    Raises ValueError with a human-readable message if something is wrong.
-    """
-    sections: List[Dict[str, Any]] = [s.model_dump() for s in survey.sections]
-
-    if not sections:
-        raise ValueError("Generated survey has no sections.")
-
-    # No empty sections
-    for sec in sections:
-        if not (sec.get("questions") or []):
-            raise ValueError(f"Section '{sec.get('title')}' has no questions.")
-
-    # Question count bounds
-    total_q = _count_questions_from_dict({"sections": sections})
-    if total_q < min_questions or total_q > max_questions:
-        raise ValueError(
-            f"Generated survey has {total_q} questions, "
-            f"which is outside the allowed range [{min_questions}, {max_questions}]."
-        )
-
-    # Unique question IDs and non-empty text
-    seen_ids: set[str] = set()
-    for sec in sections:
-        for q in sec.get("questions") or []:
-            qid = q.get("id")
-            text = (q.get("text") or "").strip()
-            if not qid or not isinstance(qid, str):
-                raise ValueError("Every question must have a non-empty string id (e.g. 'Q1').")
-            if qid in seen_ids:
-                raise ValueError(f"Duplicate question id detected: '{qid}'.")
-            seen_ids.add(qid)
-            if not text:
-                raise ValueError(f"Question '{qid}' has empty text.")
 
 
 ######################PLANNER NODE #####################
@@ -127,13 +78,6 @@ def generator_node(state: SurveyState) -> SurveyState:
 
     #STEP 4: validate
     survey = SurveyInstrument.model_validate(out)
-
-    #STEP 4b: custom structural checks beyond schema validation
-    _validate_survey_structure(
-        survey=survey,
-        min_questions=state["min_questions"],
-        max_questions=state["max_questions"],
-    )
 
     #STEP 5: save to the shared memory 
     state["survey"] = survey.model_dump()
@@ -184,25 +128,15 @@ def revise_node(state: SurveyState) -> SurveyState:
     #STEP 1: increment interation counter
     state["iter_count"] = state.get("iter_count", 0) + 1
 
-    #STEP 2: extract fixes and issues from QA report 
+    #STEP 2: extract fixes from QA report 
     qa = state.get("qa") or {}
-    issues = qa.get("issues") or []
-    fixes = qa.get("suggested_fixes") or []
+    fixes = "\n".join([f"- {x}" for x in (qa.get("suggested_fixes") or [])]) or "- (No specific fixes provided; improve clarity/neutrality and meet constraints.)"
 
-    issues_text = "\n".join([f"- {x}" for x in issues]) or "None explicitly listed."
-    fixes_text = "\n".join([f"- {x}" for x in fixes]) or "- (No specific fixes provided; improve clarity/neutrality and meet constraints.)"
-
-    #STEP 3: build an augmented brief describing what must change
-    augmented_brief = (
-        state["project_brief"]
-        + "\n\nPrevious QA issues:\n"
-        + issues_text
-        + "\n\nQA-required fixes:\n"
-        + fixes_text
-    )
+    #STEP 3: put the fixes into the project brief 
+    augmented_brief = state["project_brief"] + "\n\nQA-required fixes:\n" + fixes
     state["project_brief"] = augmented_brief
 
-    #STEP 4: re run generation with the QA-informed brief
+    #STEP 4: re run generation with the QA fixes in the brief
     return generator_node(state)
 
 
@@ -285,13 +219,6 @@ def run_human_revision(
     # STEP 5: Single generation pass — no QA loop, trust the human reviewer
     out = chat_json(GENERATOR_SYSTEM, user)
     survey = SurveyInstrument.model_validate(out)
-
-    # Apply the same structural checks used in the automated path
-    _validate_survey_structure(
-        survey=survey,
-        min_questions=current_state["min_questions"],
-        max_questions=current_state["max_questions"],
-    )
     current_state["survey"] = survey.model_dump()
 
     # STEP 6: Run one single QA check for the report — but do NOT loop on failure
