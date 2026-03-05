@@ -6,7 +6,7 @@ from typing import TypedDict, Optional
 
 from langgraph.graph import StateGraph, END
 
-from .schema import Blueprint, SurveyInstrument, QAReport
+from .schema import Blueprint, SurveyInstrument, QAReport, HumanReview
 from .llm import chat_json
 from .prompts import (
     PLANNER_SYSTEM, PLANNER_USER,
@@ -194,7 +194,6 @@ def run_human_revision(
     human_notes: str,
 ) -> dict:
     # STEP 1: Validate human input properly using HumanReview class
-    from .schema import HumanReview
     review = HumanReview.from_input(human_notes)
 
     # STEP 2: Convert to SurveyState and update revision count
