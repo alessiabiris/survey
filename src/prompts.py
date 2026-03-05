@@ -19,11 +19,16 @@ Priorities:
 - Each topic should have multiple questions, of different type
 - Analysis readiness: topics should be specific enough to analyse
 
-When choosing sections: 
-- Always start with diversity, equality and inclusion UK questions such as gender identity, sexual orientation, ethnica group, disability trying to include all categories. 
-- Group related topics into logical sections
-- Choose sections that make sense based on the brief 
-- Order the section in a logical way that make sense
+When choosing sections:
+- ALWAYS start with an "About You" section containing Scottish DEI demographic questions in this exact order:
+    1. Age — use age brackets: Under 16, 16-24, 25-34, 35-44, 45-54, 55-64, 65-74, 75 or over, Prefer not to say
+    2. Gender identity — options: Man, Woman, Non-binary, In another way (please specify), Prefer not to say
+    3. Disability — "Do you consider yourself to have a disability or long-term health condition?" Yes / No / Prefer not to say
+    4. Ethnic background — Scottish Census categories: Scottish, Other British, Irish, Polish, Other White, Mixed or multiple ethnic groups, Asian Scottish or Asian British (Indian, Pakistani, Bangladeshi, Chinese, Other Asian), African, Caribbean or Black, Other ethnic group, Prefer not to say
+- These four DEI questions are mandatory and must always appear first regardless of the project brief
+- Group all remaining topics into logical sections after the About You section
+- Choose sections that make sense based on the brief
+- Order the sections in a logical way
 Return ONLY valid JSON, no other text.
 """
 
@@ -43,13 +48,13 @@ Create a survey blueprint. Think through:
 - what are the main things we need to learn? (goals) 
 - what specific topics will we measure? (topics) 
 - how should we group questions logically? (sections)
-- what question types fit each topic? (question_types) ]
+- what question types fit each topic? (question_types)
 
 Return a JSON blueprint with the following fields: 
 - "goals": array of strings (specific, measureable objectives) 
 - "target_audience": string (from the inputted data) 
 - "topics_to_measure": array of strings (specific things to measure such as satisfaction or awareness)
-- "sections": array of strings (survey sections starting with diversity, equality and inclusiun UK questions) 
+- "sections": array of strings (first section must always be "About You" with Scottish DEI questions, then main sections) 
 - "question_types": array of strings (can be likert_5, single_choice and others) 
 - "max_questions": number (use the given limit) 
 - "notes": string or null (any additional guidance on how to construct the survey)
@@ -88,9 +93,13 @@ Task:
 Generate a complete survey.
 
 Structure:
-1. Diversity, Equality and Inclusion (from the UK, such as gender identity, sexual orientation, disability, ethnic group etc including all categories)
-2. Main sections matching blueprint sections
-3. End with open-ended feedback question
+1. FIRST SECTION — "About You" — must contain EXACTLY these four Scottish DEI questions in this order:
+   Q1. Age — single_choice with brackets: Under 16, 16-24, 25-34, 35-44, 45-54, 55-64, 65-74, 75 or over, Prefer not to say
+   Q2. Gender identity — single_choice: Man, Woman, Non-binary, In another way (please specify), Prefer not to say
+   Q3. Do you consider yourself to have a disability or long-term health condition? — single_choice: Yes, No, Prefer not to say
+   Q4. Ethnic background — single_choice using Scottish Census categories: Scottish, Other British, Irish, Polish, Other White, Mixed or multiple ethnic groups, Asian Scottish or Asian British (Indian, Pakistani, Bangladeshi, Chinese, Other Asian), African, Caribbean or Black, Other ethnic group, Prefer not to say
+2. Main sections matching the blueprint sections
+3. End with an open-ended feedback question
 
 OUTPUT FORMAT - follow this exactly:
 {{
@@ -140,12 +149,13 @@ Check for:
 - Inconsistent scales: likert scales with wrong/repeated labels. Read each option in the array carefully.
 - Duplicate questions: two questions with identical or nearly identical text.
 - Question count: count the actual questions and compare to max_questions, only flag if count exceeds max not if equal
-- Missing options: check if multi_choice/signle_choice questions need an "other"option
+- Missing options: check if multi_choice/single_choice questions need an "other" option
+- DEI section: the first section must be "About You" and must contain the four Scottish DEI questions (age brackets, gender identity, disability, ethnic background using Scottish Census categories). Flag if any are missing or use wrong categories.
 Do not flag:
 - Issues that do not actually exist 
-- Style preferences that are real problems 
+- Style preferences that are not real problems 
 
-But be precise and flag real issues and give concrete fixes.
+Be precise and flag real issues with concrete fixes.
 
 Return ONLY valid JSON, no other text.
 """
@@ -211,6 +221,7 @@ Checklist:
 - [ ] Renumber questions sequentially (Q1, Q2, Q3...) after any changes
 - [ ] Ensure likert scales have 5 different options (no repeats)
 - [ ] Do not reintroduce any of the previous QA issues
+- [ ] Keep the "About You" Scottish DEI section intact unless specifically asked to change it
 
 IMPORTANT:
 - Do not ignore any reviewer feedback
